@@ -153,4 +153,26 @@ function withElement(getRef, setRef, getRoot, getFn, isFn, callback) {
 	}, true);
 }
 
+function startObserverOnInterval(rootGetter, refGetter, refSetter, intervalGetter, intervalSetter, get, check, callback, cooldown) {
+	function wrappedCallback(tmp) {
+		if (tmp === refGetter() || tmp?.childElementCount === 0) return;
+		refSetter(tmp);
+		callback();
+		if (intervalGetter()) clearInterval(intervalGetter());
+		intervalSetter(setInterval(help, cooldown));
+	}
+
+	function help() {
+		startObserver(rootGetter(), get, check, wrappedCallback, true);
+	}
+
+	help();
+}
+
+function getStartObserverOnInterval(rootGetter, refGetter, refSetter, intervalGetter, intervalSetter) {
+	return function (get, check, callback, cooldown = 100) {
+		return startObserverOnInterval(rootGetter, refGetter, refSetter, intervalGetter, intervalSetter, get, check, callback, cooldown);
+	}
+}
+
 window.dispatchEvent(new Event('commonLoaded'));

@@ -15,7 +15,6 @@ window.addEventListener('commonLoaded', () => {
     // Injection logic
 
     console.log('injected');
-    window.documentReady = getDocumentReady.bind(document);
 
     function init() {
         const startObserverOnIntervalForMain = getStartObserverOnInterval(() => document.body,
