@@ -14,7 +14,7 @@ window.addEventListener('commonLoaded', () => {
 
     // Injection logic
 
-    console.log('intraForgeEpita');
+    console.log('injected');
     window.documentReady = getDocumentReady.bind(document);
 
     function init() {
