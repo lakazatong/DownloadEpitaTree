@@ -111,7 +111,7 @@ window.addEventListener('commonLoaded', () => {
             const preNode = doc.querySelector('pre');
 
             if (preNode) {
-                for (const node of preNode.textContent.split('\n').slice(1, -2).filter((_, i) => i % 2 === 0)) {
+                for (const node of preNode.textContent.split('\n').slice(1, -2).filter(line => line.includes(':'))) {
                     const parts = node.split(':');
                     await next(`${url}/${folderNameFromId(parts[0].trim().slice(0, -1))}`, `${folderName}/${parts[1].trim()}`);
                 }
