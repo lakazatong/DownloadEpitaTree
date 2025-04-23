@@ -50,12 +50,30 @@ window.addEventListener('commonLoaded', () => {
             withElement(() => h1, e => h1 = e, () => main, getH1, isH1, h1Callback);
         }
 
-        function h1Callback() {
-            console.log('h1', h1);
-            withElement(() => graph, e => graph = e, () => main, getGraph, isGraph, graphCallback);
+        let folderStructure = {};
+
+        function wrapH1WithDownload() {
+            const a = document.createElement('a');
+            a.href = '#';
+            a.onclick = async (e) => {
+                e.preventDefault();
+                console.log('Scraping...');
+                await buildFolderStructure();
+                console.log("Downloading and zipping...")
+                zipFiles(h1.textContent, folderStructure);
+            };
+
+            h1.parentNode.replaceChild(a, h1);
+            a.appendChild(h1);
         }
 
-        let folderStructure = {};
+        function h1Callback() {
+            console.log('h1', h1);
+            withElement(() => graph, e => graph = e, () => main, getGraph, isGraph, () => {
+                graphCallback();
+                wrapH1WithDownload();
+            });
+        }
 
         function folderNameFromId(id) {
             const parts = id.split('/');
@@ -63,18 +81,13 @@ window.addEventListener('commonLoaded', () => {
         }
 
         async function getDoc(url) {
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    console.log('Access denied for', url);
-                    return null;
-                }
-                const text = await response.text();
-                return new DOMParser().parseFromString(text, 'text/html');
-            } catch {
+            const response = await fetch(url);
+            if (!response.ok) {
                 console.log('Access denied for', url);
                 return null;
             }
+            const text = await response.text();
+            return new DOMParser().parseFromString(text, 'text/html');
         }
 
         async function addFiles(url, folderName) {
@@ -96,7 +109,7 @@ window.addEventListener('commonLoaded', () => {
             const doc = await getDoc(url);
             if (!doc) return;
             const preNode = doc.querySelector('pre');
-        
+
             if (preNode) {
                 for (const node of preNode.textContent.split('\n').slice(1, -2).filter((_, i) => i % 2 === 0)) {
                     const parts = node.split(':');
@@ -109,16 +122,24 @@ window.addEventListener('commonLoaded', () => {
             }
         }
 
-        async function graphCallback() {
-            console.log('graph', graph);
+        async function buildFolderStructure() {
             for (const child of graph.children) {
                 const a = child.querySelector('a');
                 if (!a) continue;
                 const parts = child.getAttribute('id').split('"');
                 await next(window.location.href + '/' + folderNameFromId(parts[parts.length - 2]), child.querySelector('span').textContent);
             }
+        }
 
-            zipFiles(h1.textContent, folderStructure);
+        async function graphCallback() {
+            console.log('graph', graph);
+            const style = document.createElement('style');
+            style.textContent = `
+                h1:hover {
+                    color: #0072DB;
+                }
+            `;
+            document.head.appendChild(style);
         }
 
         startObserverOnIntervalForMain(getMain, isMain, mainCallback);
