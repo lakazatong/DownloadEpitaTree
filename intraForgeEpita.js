@@ -54,12 +54,17 @@ window.addEventListener('commonLoaded', () => {
         function wrapH1WithDownload() {
             const a = document.createElement('a');
             a.href = '#';
+            a.style.pointerEvents = 'auto';
             a.onclick = async (e) => {
                 e.preventDefault();
+                a.style.pointerEvents = 'none';
+                a.style.opacity = '0.5';
                 console.log('Scraping...');
                 await buildFolderStructure();
                 console.log("Downloading and zipping...")
-                zipFiles(h1.textContent, folderStructure);
+                await zipFiles(h1.textContent, folderStructure);
+                a.style.pointerEvents = 'auto';
+                a.style.opacity = '1';
             };
 
             h1.parentNode.replaceChild(a, h1);

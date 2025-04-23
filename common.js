@@ -16,7 +16,7 @@ async function zipFiles(zipName, folderStructure) {
 		}
 	}
 
-	zip.generateAsync({ type: 'blob' }).then(content => {
+	return zip.generateAsync({ type: 'blob' }).then(content => {
 		const link = document.createElement('a');
 		link.href = URL.createObjectURL(content);
 		link.download = `${zipName}.zip`;
