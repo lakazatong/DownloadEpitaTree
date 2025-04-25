@@ -12,6 +12,8 @@ window.addEventListener('commonLoaded', () => {
     let h1;
     let graph;
 
+    const nodeIdRegex = /_required=(?<required>\w+)\/_validated=(?<validated>\w+)\/_accessible=(?<accessible>\w+)\/(?<path>[\w~\/]+)/mg;
+
     // Injection logic
 
     console.log('injected');
@@ -87,7 +89,7 @@ window.addEventListener('commonLoaded', () => {
         async function getDoc(url) {
             const response = await fetch(url);
             if (!response.ok) {
-                console.log('Access denied for', url);
+                console.log('Access denied for\n', url, '\ngot\n', response);
                 return null;
             }
             const text = await response.text();
@@ -117,7 +119,9 @@ window.addEventListener('commonLoaded', () => {
             if (preNode) {
                 for (const node of preNode.textContent.split('\n').slice(1, -2).filter(line => line.includes(':'))) {
                     const parts = node.split(':');
-                    await next(`${url}/${folderNameFromId(parts[0].trim().slice(0, -1))}`, `${folderName}/${parts[1].trim()}`);
+                    nodeIdRegex.lastIndex = 0;
+                    const res = nodeIdRegex.exec(parts[0].trim());
+                    await next(`${window.location.origin}/${res.groups.path.replaceAll('~', '-')}`, `${folderName}/${parts[1].trim()}${res.groups.required === "false" ? " (bonus)" : ""}`);
                 }
             } else {
                 for (const final of doc.querySelector('div[class="list"]').children) {
@@ -128,10 +132,10 @@ window.addEventListener('commonLoaded', () => {
 
         async function buildFolderStructure() {
             for (const child of graph.children) {
-                const a = child.querySelector('a');
-                if (!a) continue;
-                const parts = child.getAttribute('id').split('"');
-                await next(window.location.href + '/' + folderNameFromId(parts[parts.length - 2]), child.querySelector('span').textContent);
+                nodeIdRegex.lastIndex = 0;
+                const res = nodeIdRegex.exec(child.getAttribute('id'));
+                if (!res || res.groups.accessible === "false") continue;
+                await next(`${window.location.origin}/${res.groups.path.replaceAll('~', '-')}`, `${child.querySelector('span').textContent}${res.groups.required === "false" ? " (bonus)" : ""}`);
             }
         }
 
